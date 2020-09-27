@@ -22,7 +22,10 @@ function anchorAngle(angle, adjSide, oppoSide, side) {
 
 function oppositeAngle(angle, adjSide, oppoSide, side) {
   let a = getLength(adjSide, side, angle);
-  return getAngle(a, adjSide, side) + getAngle(a, side, oppoSide);
+  if (angle > Math.PI)
+    return -getAngle(a, adjSide, side) + getAngle(a, side, oppoSide);
+  else
+    return getAngle(a, adjSide, side) + getAngle(a, side, oppoSide);
 }
 
 function getPoint(x, y, len, angle) {
@@ -38,80 +41,53 @@ function dst(x, y, x2, y2) {
 let ctx = cnv.getContext("2d")
 
 
-function draw(left, right, phase2 = false) {
+function draw(left, right) {
 
-  let aL = -anchorAngle(left, body, dist, arm)
-  let aR = anchorAngle(right, body, dist, arm) - Math.PI
+  let bL = [100, 500]
+  let bR = [100 + body, 500]
 
-  if (phase2) {
-    aL = Math.PI * 2 - aL
-    aR = Math.PI * 2 - aR
-  }
-
-  let anchorL = [100, 500]
-  let anchorR = [100 + dist, 500]
-
-  let bodyL = getPoint(...anchorL, arm, aL)
-  let bodyR = getPoint(...anchorR, arm, aR)
+  let aL = getPoint(...bL, arm, left)
+  let aR = getPoint(...bR, arm, Math.PI - right)
 
   ctx.clearRect(0, 0, 9999, 9999)
   ctx.beginPath()
-  ctx.moveTo(...anchorL)
-  ctx.lineTo(...bodyL)
+  ctx.moveTo(...bL)
+  ctx.lineTo(...aL)
 
-  ctx.moveTo(...anchorR)
-  ctx.lineTo(...bodyR)
+  ctx.moveTo(...bR)
+  ctx.lineTo(...aR)
 
-  ctx.moveTo(...bodyL)
-  ctx.lineTo(...bodyR)
+  ctx.moveTo(...bL)
+  ctx.lineTo(...bR)
+
   ctx.stroke()
 }
 
 const sleep = t => new Promise((res, rej) => setTimeout(res, t))
 
 async function main() {
-  let startAngle, endAngle, left, right
+  let left, right
+  let startAngle = Math.PI * 5 / 6
+  let endAngle = Math.PI * 2 - getAngle(arm, body / 2, dist / 2)
 
   while (true) {
     try {
       // Phase 1
       // Right-base movement
-      startAngle = Math.PI * 5 / 6
-      endAngle = Math.PI * 2 - getAngle(arm, body / 2, dist / 2)
-      for (right = startAngle; right < endAngle; right += 0.01) {
-        left = oppositeAngle(right, body, dist, arm);
+      for (let t = startAngle; t < endAngle; t += 0.01) {
+        right = t
+        left = oppositeAngle(t, body, dist, arm);
         draw(left, right)
         await sleep(10)
       }
 
       // Phase 2
       // Left-base movement
-      startAngle = Math.PI * 2 - getAngle(arm, body / 2, dist / 2)
-      endAngle = Math.PI * 5 / 6
-      for (left = startAngle; left > endAngle; left -= 0.01) {
-        right = oppositeAngle(left, body, dist, arm);
-        draw(left, right, true)
-        await sleep(10)
-      }
-
-      await sleep(500);
-
-      // Phase 2 - reverse
-      startAngle = Math.PI * 5 / 6
-      endAngle = Math.PI * 2 - getAngle(arm, body / 2, dist / 2)
-      for (left = startAngle; left < endAngle; left += 0.01) {
-        right = oppositeAngle(left, body, dist, arm);
-        draw(left, right, true)
-        await sleep(20)
-      }
-
-      // Phase 1 - reverse
-      startAngle = Math.PI * 2 - getAngle(arm, body / 2, dist / 2)
-      endAngle = Math.PI * 5 / 6
-      for (right = startAngle; right > endAngle; right -= 0.01) {
-        left = oppositeAngle(right, body, dist, arm);
+      for (let t = endAngle; t > startAngle; t -= 0.01) {
+        right = Math.PI * 2 - oppositeAngle(t, body, dist, arm);
+        left = Math.PI * 2 - t
         draw(left, right)
-        await sleep(20)
+        await sleep(10)
       }
     } catch (_) {
       console.log(_)
