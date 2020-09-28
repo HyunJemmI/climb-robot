@@ -1,72 +1,73 @@
 const PI = 3.141592653589793238462643383279
 
-let body = 150; // 모터 축 사이 간격
-let arm = 100; // 팔 길이
-let dist = body + Math.sqrt(3) * arm; // 전자석 사이 간격
+let lenBody = 150; // Length of body
+let lenArm = 100; // Length of arm
+let dist = lenBody + Math.sqrt(3) * lenArm; // Distance between the end points of arms
 
-inputArm.value = arm
-inputBody.value = body
+inputArm.value = lenArm
+inputBody.value = lenBody
 
-// 제2 코사인 법칙
-// 두 변 a,b와 끼인각 t가 주어질 때 마주보는 변의 길이를 계산
-function getLength(a, b, t) {
-  return Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(t));
+// The second law of cosines
+function getLength(a, b, theta) {
+  return Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(theta));
 }
 
-// 역 제2 코사인 법칙
-// 두 변 a,b와 마주보는 변 c가 주어질 때 끼인각을 계산
+// The inverse second law of cosines
 function getAngle(a, b, c) {
   return Math.acos((a * a + b * b - c * c) / (2 * a * b));
 }
 
-// 앵커 각도 계산(수평선과 arm이 이루는 각도)
-// left와 right는 각각 body와 arm의 각도.
-// 수식은 기하학적으로 푼 것을 대수적으로 전개한 것. 복잡함.
+// Calculate the anchor angle (the angle between the horizontal line and the arm)
+// The parameters `left` and `right` are angles between body and arms.
 function anchorAngle(left, right) {
-  let h = arm * (Math.sin(left) - Math.sin(right))
+  let h = lenArm * (Math.sin(left) - Math.sin(right))
   let ru = Math.asin(h / dist)
   let aaR = 3 * PI / 2 - right + ru
   return [left + right + aaR - PI / 2, PI / 2 + aaR]
 }
 
-// 한쪽 arm과 body가 이 이루는 각도가 주어졌을 때, 다른쪽 arm과 body가 이루는 각도
+// When given the angle between one arm and the body, the angle between the other arm and the body
 function oppositeAngle(angle) {
-  let a = getLength(body, arm, angle);
+  let a = getLength(lenBody, lenArm, angle);
   if (angle > PI)
-    return -getAngle(a, body, arm) + getAngle(a, arm, dist);
+    return -getAngle(a, lenBody, lenArm) + getAngle(a, lenArm, dist);
   else
-    return getAngle(a, body, arm) + getAngle(a, arm, dist);
+    return getAngle(a, lenBody, lenArm) + getAngle(a, lenArm, dist);
 }
 
-// (x,y)로부터 기울기 angle(rad)만큼 기울어진 직선을 따라 len만큼 떨어진 점의 좌표
+// The coordinates of a point `len` pixel away from (x,y) with angle
 function getPoint(x, y, len, angle) {
   return [x + Math.cos(angle) * len, y - Math.sin(angle) * len]
 }
 
-// 두 점의 거리를 계산
+// Calculate distacne between two points
 function dst(x1, y1, x2, y2) {
   let dx = x2 - x1
   let dy = y2 - y1
   return Math.sqrt(dx * dx + dy * dy)
 }
 
+// Initialize canvas sieze
 let [w, h] = [cnv.clientWidth, cnv.clientHeight]
 cnv.width = w;
 cnv.height = h;
 let ctx = cnv.getContext("2d")
 
-// 왼쪽 arm과 오른쪽 arm이 이루는 각으로부터 몸체 기울기 등을 계산하여 화면에 표시
-function draw(left, right) {
+// Draw robot on canvas
+function draw(left, right, phase3) {
   ctx.clearRect(0, 0, 9999, 9999)
   ctx.beginPath()
-  {
-    let ahL = [100, 500]
-    let acR = [100 + dist, 500]
+
+  const yPos = 200
+
+  if (!phase3) {
+    let ahL = [100, yPos]
+    let acR = [100 + dist, yPos]
 
     let [aaL, aaR] = anchorAngle(left, right)
 
-    let bdL = getPoint(...ahL, arm, aaL)
-    let bdR = getPoint(...acR, arm, aaR)
+    let bdL = getPoint(...ahL, lenArm, aaL)
+    let bdR = getPoint(...acR, lenArm, aaR)
 
     ctx.moveTo(...ahL)
     ctx.lineTo(...bdL)
@@ -79,12 +80,12 @@ function draw(left, right) {
 
     ctx.stroke()
   }
-  {
-    let bdL = [300 + dist, 500]
-    let bdR = [300 + dist + body, 500]
+  else {
+    let bdL = [100 + lenArm * Math.sqrt(3) / 2, yPos - lenArm / 2]
+    let bdR = [100 + lenArm * Math.sqrt(3) / 2 + lenBody, yPos - lenArm / 2]
 
-    let aL = getPoint(...bdL, arm, left)
-    let aR = getPoint(...bdR, arm, PI - right)
+    let aL = getPoint(...bdL, lenArm, left)
+    let aR = getPoint(...bdR, lenArm, PI - right)
 
     ctx.moveTo(...bdL)
     ctx.lineTo(...aL)
@@ -99,55 +100,48 @@ function draw(left, right) {
   ctx.stroke()
 }
 
-// async function내에서 사용가능한 sleep(ms)함수
+// sleep(ms) function that can be used in async function
 const sleep = t => new Promise((res, rej) => setTimeout(res, t))
 
-// async하게 스크립트를 실행하기 위한 main함수
+const startAngle = PI * 5 / 6
+const endAngle = PI * 2 - getAngle(lenArm, lenBody / 2, dist / 2)
 
-let startAngle = PI * 5 / 6
-let endAngle = PI * 2 - getAngle(arm, body / 2, dist / 2)
-
+// Main function(for async use)
 async function main() {
   let left, right
 
   while (true) {
+    let text = 'Left arm angle(rad)\tRight arm angle(rad)\n'
 
     try {
       // Phase 1
-      // Right-base movement
       for (let t = startAngle; t < endAngle; t += 0.01) {
         right = t
-        left = oppositeAngle(t, body, dist, arm);
+        left = oppositeAngle(t, lenBody, dist, lenArm);
         draw(left, right)
+        text += left + '\t' + right + '\n'
         await sleep(10)
       }
 
       // Phase 2
-      // Left-base movement
       for (let t = endAngle; t > startAngle; t -= 0.01) {
-        right = PI * 2 - oppositeAngle(t, body, dist, arm);
+        right = PI * 2 - oppositeAngle(t, lenBody, dist, lenArm);
         left = PI * 2 - t
         draw(left, right)
+        text += left + '\t' + right + '\n'
         await sleep(10)
       }
 
-      await sleep(500)
-
-      // Inverse phase 2
-      for (let t = startAngle; t < endAngle; t += 0.01) {
-        right = PI * 2 - oppositeAngle(t, body, dist, arm);
-        left = PI * 2 - t
-        draw(left, right)
-        await sleep(10)
-      }
-
-      // Inverse phase 1
-      for (let t = endAngle; t > startAngle; t -= 0.01) {
+      // Phase 3(lift arms)
+      for (let t = PI * 2 - startAngle; t > startAngle; t -= 0.01) {
+        left = t
         right = t
-        left = oppositeAngle(t, body, dist, arm);
-        draw(left, right)
+        draw(left, right, true)
+        text += left + '\t' + right + '\n'
         await sleep(10)
       }
+
+      log.value = text
 
       await sleep(500)
     } catch (_) {
@@ -159,15 +153,15 @@ async function main() {
 
 main()
 
-// range input linstener
+// Control listener linstener
 function updateArm(event) {
-  arm = +event.target.value
-  dist = body + Math.sqrt(3) * arm;
-  endAngle = PI * 2 - getAngle(arm, body / 2, dist / 2)
+  lenArm = +event.target.value
+  dist = lenBody + Math.sqrt(3) * lenArm;
+  endAngle = PI * 2 - getAngle(lenArm, lenBody / 2, dist / 2)
 }
 
 function updateBody(event) {
-  body = +event.target.value
-  dist = body + Math.sqrt(3) * arm;
-  endAngle = PI * 2 - getAngle(arm, body / 2, dist / 2)
+  lenBody = +event.target.value
+  dist = lenBody + Math.sqrt(3) * lenArm;
+  endAngle = PI * 2 - getAngle(lenArm, lenBody / 2, dist / 2)
 }
