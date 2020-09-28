@@ -4,25 +4,53 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
+        <style>
+            html,
+            body {
+                margin: 0px;
+                padding: 0px;
+            }
+
+            #cnv {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
     </head>
     <body>
-        <div>
-            <input
-                type="range"
-                min="10"
-                max="300"
-                value="150"
-                onchange="updateArm(event)"
-            />
-            <input
-                type="range"
-                min="10"
-                max="300"
-                value="70"
-                onchange="updateBody(event)"
-            />
-        </div>
-        <canvas id="cnv" width="1000" height="1000"></canvas>
+        <h1>Wall climbing robot simulation</h1>
+        <table>
+            <tr>
+                <td><label for="inputArm">Arm Length</label></td>
+                <td>
+                    <input
+                        id="inputArm"
+                        type="range"
+                        min="10"
+                        max="300"
+                        value="150"
+                        onchange="updateArm(event)"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="inputBoy">Body Length</label>
+                </td>
+                <td>
+                    <input
+                        id="inputBody"
+                        type="range"
+                        min="10"
+                        max="300"
+                        value="70"
+                        onchange="updateBody(event)"
+                    />
+                </td>
+            </tr>
+        </table>
+        <div></div>
+        <canvas id="cnv"></canvas>
         <script src="./climb.js"></script>
     </body>
 </html>
