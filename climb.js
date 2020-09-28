@@ -2,8 +2,6 @@ let body = 150; // 모터 축 사이 간격
 let arm = 100; // 팔 길이
 let dist = body + Math.sqrt(3) * arm; // 전자석 사이 간격
 
-bodyLen.innerText = body
-
 // 제2 코사인 법칙
 // 두 변 a,b와 끼인각 t가 주어질 때 마주보는 변의 길이를 계산
 function getLength(a, b, t) {
@@ -51,26 +49,44 @@ let ctx = cnv.getContext("2d")
 
 // 왼쪽 arm과 오른쪽 arm이 이루는 각으로부터 몸체 기울기 등을 계산하여 화면에 표시
 function draw(left, right) {
-  let ahL = [100, 500]
-  let acR = [100 + dist, 500]
-
-  let [aaL, aaR] = anchorAngle(left, right)
-
-  let bdL = getPoint(...ahL, arm, aaL)
-  let bdR = getPoint(...acR, arm, aaR)
-
-  bodyLen.innerText = dst(...bdL, ...bdR)
-
   ctx.clearRect(0, 0, 9999, 9999)
   ctx.beginPath()
-  ctx.moveTo(...ahL)
-  ctx.lineTo(...bdL)
+  {
+    let ahL = [100, 500]
+    let acR = [100 + dist, 500]
 
-  ctx.moveTo(...acR)
-  ctx.lineTo(...bdR)
+    let [aaL, aaR] = anchorAngle(left, right)
 
-  ctx.moveTo(...bdL)
-  ctx.lineTo(...bdR)
+    let bdL = getPoint(...ahL, arm, aaL)
+    let bdR = getPoint(...acR, arm, aaR)
+
+    ctx.moveTo(...ahL)
+    ctx.lineTo(...bdL)
+
+    ctx.moveTo(...acR)
+    ctx.lineTo(...bdR)
+
+    ctx.moveTo(...bdL)
+    ctx.lineTo(...bdR)
+
+    ctx.stroke()
+  }
+  {
+    let bdL = [300 + dist, 500]
+    let bdR = [300 + dist + body, 500]
+
+    let aL = getPoint(...bdL, arm, left)
+    let aR = getPoint(...bdR, arm, Math.PI - right)
+
+    ctx.moveTo(...bdL)
+    ctx.lineTo(...aL)
+
+    ctx.moveTo(...bdR)
+    ctx.lineTo(...aR)
+
+    ctx.moveTo(...bdL)
+    ctx.lineTo(...bdR)
+  }
 
   ctx.stroke()
 }
