@@ -11,14 +11,48 @@
                 padding: 0px;
             }
 
+            .frame {
+                display: flex;
+                flex-direction: row;
+                width: 90%;
+                margin: 5%;
+            }
+
             #cnv {
-                width: 100%;
+                width: 50%;
                 height: 100%;
+            }
+
+            #log {
+                width: 50%;
+            }
+
+            h1 {
+                text-align: center;
+            }
+
+            p {
+                width: 500px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            table {
+                margin: 32px;
             }
         </style>
     </head>
     <body>
         <h1>Wall climbing robot simulation</h1>
+        <p>
+            The page simulates a robot climbing a wall with two arms attached to
+            its body. First, the robot fixes the arm to the wall and then lifts
+            the body. Then, it fixes the body to the wall and raises its arm
+            back up and returns to its original state. By repeating this
+            process, the robot moves up. After simulation, calculated angle
+            value will be displayed in textbox.
+        </p>
+        <p>Contact : unknownpgr@gmail.com</p>
         <table>
             <tr>
                 <td><label for="inputArm">Arm Length</label></td>
@@ -49,8 +83,10 @@
                 </td>
             </tr>
         </table>
-        <div></div>
-        <canvas id="cnv"></canvas>
+        <div class="frame">
+            <canvas id="cnv"></canvas>
+            <textarea id="log"></textarea>
+        </div>
         <script src="./climb.js"></script>
     </body>
 </html>
