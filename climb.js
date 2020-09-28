@@ -1,7 +1,7 @@
 const PI = 3.141592653589793238462643383279
 
 let lenBody = 150; // Length of body
-let lenArm = 100; // Length of arm
+let lenArm = 70; // Length of arm
 let dist = lenBody + Math.sqrt(3) * lenArm; // Distance between the end points of arms
 
 inputArm.value = lenArm
