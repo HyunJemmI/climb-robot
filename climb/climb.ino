@@ -2,21 +2,39 @@
 #include <Adafruit_PWMServoDriver.h>
 
 #define PI 3.1415926535897932384626
-#define ANGLE_DEFAULT 85
+#define ANGLE_DEFAULT 90
 
 int pinArmL = 1;
 int pinArmR = 0;
+
+int magnetR = 3;
+int magnetL = 4;
+int magnetC = 5;
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 void setup()
 {
+  // Initialize servo motor
   pwm.begin();
   pwm.setPWMFreq(50);
-  pwm.setPWM(pinArmL, 0, ANGLE_DEFAULT);
-  pwm.setPWM(pinArmR, 0, ANGLE_DEFAULT);
+  pwm.setPWM(pinArmL, 0, map(ANGLE_DEFAULT, 0, 180, 150, 600));
+  pwm.setPWM(pinArmR, 0, map(ANGLE_DEFAULT, 0, 180, 150, 600));
 
-  delay(10000);
+  // Initialize magnet
+  pinMode(magnetR, OUTPUT);
+  pinMode(magnetL, OUTPUT);
+  pinMode(magnetC, OUTPUT);
+  digitalWrite(magnetL, HIGH);
+  digitalWrite(magnetR, HIGH);
+  delay(1000);
+
+  // Servo test code
+  //  delay(10000);
+  //  for (float theta = 0;; theta += 0.01) {
+  //    pwm.setPWM(pinArmR, 0, ANGLE_DEFAULT + sin(theta) * 70);
+  //    delay(10);
+  //  }
 }
 
 void setServo(double l, double r)
@@ -24,9 +42,9 @@ void setServo(double l, double r)
   double angleLeft = ANGLE_DEFAULT + 150 - l * 180 / PI;
   double angleRight = ANGLE_DEFAULT + r * 180 / PI - 150;
 
-  pwm.setPWM(pinArmL, 0, (short)angleLeft);
-  pwm.setPWM(pinArmL, 0, (short)angleRight);
-  delay(50);
+  pwm.setPWM(pinArmL, 0, map(angleLeft, 0, 180, 150, 600));
+  pwm.setPWM(pinArmR, 0, map(angleRight, 0, 180, 150, 600));
+  delay(10);
 }
 
 void loop()
