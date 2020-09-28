@@ -47,6 +47,11 @@ function dst(x1, y1, x2, y2) {
   return Math.sqrt(dx * dx + dy * dy)
 }
 
+// Calculate center of two points
+function center(x1, y1, x2, y2) {
+  return [(x1 + x2) / 2, (y1 + y2) / 2]
+}
+
 // Initialize canvas sieze
 let [w, h] = [cnv.clientWidth, cnv.clientHeight]
 cnv.width = w;
@@ -56,20 +61,21 @@ let ctx = cnv.getContext("2d")
 // Draw robot on canvas
 function draw(left, right, phase3) {
   ctx.clearRect(0, 0, 9999, 9999)
-  ctx.beginPath()
 
   const yPos = 200
 
   if (!phase3) {
-    let ahL = [100, yPos]
+    let acL = [100, yPos]
     let acR = [100 + dist, yPos]
 
     let [aaL, aaR] = anchorAngle(left, right)
 
-    let bdL = getPoint(...ahL, lenArm, aaL)
+    let bdL = getPoint(...acL, lenArm, aaL)
     let bdR = getPoint(...acR, lenArm, aaR)
 
-    ctx.moveTo(...ahL)
+    ctx.beginPath()
+
+    ctx.moveTo(...acL)
     ctx.lineTo(...bdL)
 
     ctx.moveTo(...acR)
@@ -79,25 +85,50 @@ function draw(left, right, phase3) {
     ctx.lineTo(...bdR)
 
     ctx.stroke()
+
+    ctx.beginPath()
+    ctx.arc(...acL, 5, 0, 7)
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.arc(...acR, 5, 0, 7)
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.arc(...center(...bdL, ...bdR), 5, 0, 7)
+    ctx.stroke()
   }
   else {
     let bdL = [100 + lenArm * Math.sqrt(3) / 2, yPos - lenArm / 2]
     let bdR = [100 + lenArm * Math.sqrt(3) / 2 + lenBody, yPos - lenArm / 2]
 
-    let aL = getPoint(...bdL, lenArm, left)
-    let aR = getPoint(...bdR, lenArm, PI - right)
+    let acL = getPoint(...bdL, lenArm, left)
+    let acR = getPoint(...bdR, lenArm, PI - right)
+
+    ctx.beginPath()
 
     ctx.moveTo(...bdL)
-    ctx.lineTo(...aL)
+    ctx.lineTo(...acL)
 
     ctx.moveTo(...bdR)
-    ctx.lineTo(...aR)
+    ctx.lineTo(...acR)
 
     ctx.moveTo(...bdL)
     ctx.lineTo(...bdR)
-  }
+    ctx.stroke()
 
-  ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(...acL, 5, 0, 7)
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.arc(...acR, 5, 0, 7)
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.arc(...center(...bdL, ...bdR), 5, 0, 7)
+    ctx.fill()
+  }
 }
 
 // sleep(ms) function that can be used in async function
@@ -114,7 +145,7 @@ async function main() {
     let text = 'Left arm angle(rad)\tRight arm angle(rad)\n'
 
     try {
-      // Phase 1
+      // Phase 1(Move body from bottom to center)
       for (let t = startAngle; t < endAngle; t += 0.01) {
         right = t
         left = oppositeAngle(t, lenBody, dist, lenArm);
@@ -123,7 +154,7 @@ async function main() {
         await sleep(10)
       }
 
-      // Phase 2
+      // Phase 2(Move body from center to top)
       for (let t = endAngle; t > startAngle; t -= 0.01) {
         right = PI * 2 - oppositeAngle(t, lenBody, dist, lenArm);
         left = PI * 2 - t
