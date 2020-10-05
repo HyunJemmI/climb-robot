@@ -142,7 +142,12 @@ async function main() {
   let left, right
 
   while (true) {
-    let text = 'Left arm angle(rad)\tRight arm angle(rad)\n'
+    let text = ''
+    let format = inputFormat.value
+
+    function addOutput() {
+      text += format.replace('#LEFT', left).replace('#RIGHT', right) + '\n'
+    }
 
     try {
       // Phase 1(Move body from bottom to center)
@@ -150,8 +155,8 @@ async function main() {
         right = t
         left = oppositeAngle(t, lenBody, dist, lenArm);
         draw(left, right)
-        text += left + '\t' + right + '\n'
-        await sleep(10)
+        addOutput();
+        await sleep(2)
       }
 
       // Phase 2(Move body from center to top)
@@ -159,17 +164,19 @@ async function main() {
         right = PI * 2 - oppositeAngle(t, lenBody, dist, lenArm);
         left = PI * 2 - t
         draw(left, right)
-        text += left + '\t' + right + '\n'
-        await sleep(10)
+        addOutput();
+        await sleep(2)
       }
 
-      // Phase 3(lift arms)
-      for (let t = PI * 2 - startAngle; t > startAngle; t -= 0.01) {
-        left = t
-        right = t
-        draw(left, right, true)
-        text += left + '\t' + right + '\n'
-        await sleep(10)
+      if (inputRestore.checked) {
+        // Phase 3(lift arms)
+        for (let t = PI * 2 - startAngle; t > startAngle; t -= 0.01) {
+          left = t
+          right = t
+          draw(left, right, true)
+          addOutput();
+          await sleep(2)
+        }
       }
 
       log.value = text
